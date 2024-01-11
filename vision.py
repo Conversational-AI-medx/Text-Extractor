@@ -10,6 +10,7 @@ import os
 import pathlib
 import textwrap
 from PIL import Image
+from uuid import uuid4
 
 
 import google.generativeai as genai
@@ -34,7 +35,7 @@ def get_gemini_response(input_text,image,prompt):
 
     # Generate content
     try:
-        response = model.generate_content([input_text, image[0]])
+        response = model.generate_content([input_text, image[0],prompt])
     except Exception as e:
         print(f"An error occurred while generating content: {e}")
         return None
@@ -82,8 +83,46 @@ input_prompt = """
 
 ## If ask button is clicked
 
+
+
+import requests
+from uuid import uuid4
+
+def translate_text(text):
+    key = "f3a47cba04864b638e74f100019a703b"
+    endpoint = "https://api.cognitive.microsofttranslator.com"
+    location = "southeastasia"
+
+    try:
+        response = requests.post(
+            f"{endpoint}/translate",
+            json=[{"text": text}],
+            headers={
+                "Ocp-Apim-Subscription-Key": key,
+                "Ocp-Apim-Subscription-Region": location,
+                "Content-type": "application/json",
+                "X-ClientTraceId": str(uuid4()),
+            },
+            params={
+                "api-version": "3.0",
+                "fromLang": "en",
+                "to": "or"
+            }
+        )
+        
+        response.raise_for_status()  # Raise an error for unsuccessful responses
+
+        result = response.json()
+        return result[0]['translations'][0]['text']
+    except requests.exceptions.RequestException as e:
+        print(f"Translation error: {e}")
+
+
 if submit:
     image_data = input_image_setup(uploaded_file)
     response=get_gemini_response(input_prompt,image_data,input)
     st.subheader("The Response is")
-    st.write(response)
+
+
+    
+    st.write(translate_text(response))
