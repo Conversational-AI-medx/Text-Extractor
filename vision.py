@@ -20,11 +20,27 @@ genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
 ## Function to load OpenAI model and get respones
 
-def get_gemini_response(input,image,prompt):
+def get_gemini_response(input_text,image,prompt):
+    # Validate inputs
+    if not input_text or not image or not prompt:
+        raise ValueError("All parameters must be provided and non-empty")
+
+    # Load the model
     model = genai.GenerativeModel('gemini-pro-vision')
-    response = model.generate_content([input,image[0],prompt])
+
+    # Ensure the image parameter is a list and has at least one item
+    if not isinstance(image, list) or len(image) == 0:
+        raise ValueError("Image parameter must be a list with at least one item")
+
+    # Generate content
+    try:
+        response = model.generate_content([input_text, image[0]])
+    except Exception as e:
+        print(f"An error occurred while generating content: {e}")
+        return None
+
+    # Return the generated text
     return response.text
-    
 
 def input_image_setup(uploaded_file):
     # Check if a file has been uploaded
@@ -59,9 +75,9 @@ if uploaded_file is not None:
 submit=st.button("Tell me about the image")
 
 input_prompt = """
-               You are an expert in understanding invoices.
-               You will receive input images as invoices &
-               you will have to answer questions based on the input image
+               You are an expert in understanding image.
+               You will receive input images
+               and you need to extract the exact text from the image
                """
 
 ## If ask button is clicked
